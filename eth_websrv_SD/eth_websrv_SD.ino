@@ -45,6 +45,7 @@ IPAddress ip(192, 168, 1, 20); // IP address, may need to change depending on ne
 EthernetServer server(80);  // create a server at port 80
 
 File webFile;
+File logFile;
 
 void setup()
 {
@@ -80,6 +81,11 @@ void loop()
         while (client.connected()) {
             if (client.available()) {   // client data available to read
                 char c = client.read(); // read 1 byte (character) from client
+                
+                logFile = SD.open("log.txt", FILE_WRITE);
+                logFile.print(c);
+                logFile.close();
+                
                 // last line of client request is blank and ends with \n
                 // respond to client only after last line received
                 if (c == '\n' && currentLineIsBlank) {
@@ -110,7 +116,7 @@ void loop()
                 }
             } // end if (client.available())
         } // end while (client.connected())
-        delay(1);      // give the web browser time to receive the data
+        delay(2);      // give the web browser time to receive the data
         client.stop(); // close the connection
     } // end if (client)
 }
