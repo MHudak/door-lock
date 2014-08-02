@@ -44,15 +44,32 @@ IPAddress ip(192, 168, 1, 20); // IP address, may need to change depending on ne
 
 EthernetServer server(80);  // create a server at port 80
 
+
+
+String getFinder;
+String variable;
+String value;
 File webFile;
 File logFile;
+int motorControl = 3;
+char c;
+EthernetClient client;
+//
+//void log(){
+//      logFile = SD.open("log.txt", FILE_WRITE);
+//      logFile.print(c);
+//      logFile.close(); 
+//  
+//}
 
 void setup()
 {
 //    // disable w5100 SPI
-//    pinMode(10,OUTPUT);
+    pinMode(motorControl,OUTPUT);
 //    digitalWrite(10,HIGH);
-  
+    value.reserve(25);
+    getFinder.reserve(3);
+    variable.reserve(10);
     Ethernet.begin(mac, ip);  // initialize Ethernet device
     server.begin();           // start to listen for clients
     Serial.begin(9600);       // for debugging
@@ -72,20 +89,87 @@ void setup()
     Serial.println("SUCCESS - Found index.htm file.");
 }
 
-void loop()
-{
-    EthernetClient client = server.available();  // try to get client
+void processVariable(){
+   switch(variable.charAt(0)){
+      case 'u': //username
+                 break;
+      case 'c': //command
+                 if(value.compareTo("open") == 0){//assume value == open
+                   digitalWrite(motorControl, HIGH);
+                 }else if (value.compareTo("close")== 0){//assume value == close
+                   digitalWrite(motorControl, LOW);                   
+                 }
+                 break;
+      case 'p': //password
+                 break;
+      default:   break; 
+   }
+}
 
-    if (client) {  // got client?
-        boolean currentLineIsBlank = true;
-        while (client.connected()) {
-            if (client.available()) {   // client data available to read
-                char c = client.read(); // read 1 byte (character) from client
+void readRequestLine(){
+  int atVariables = 0;
+  int onValue = 0;
+  while((c = client.read()) != ' '){
+    if(atVariables){
+      if(c != '&'){
+        if(onValue){
                 
                 logFile = SD.open("log.txt", FILE_WRITE);
                 logFile.print(c);
                 logFile.close();
+          variable += c;
+        }else{
                 
+                logFile = SD.open("log.txt", FILE_WRITE);
+                logFile.print(c);
+                logFile.close();
+          value += c; 
+        }
+      }else{
+        processVariable();
+        onValue = 0;
+      }
+      
+      log(c); 
+    }else{
+      if(c == '?'){
+        atVariables = 1;
+      }
+    }
+  }
+}
+
+void loop()
+{
+    client = server.available();  // try to get client
+
+    if (client) {  // got client?
+        boolean currentLineIsBlank = true;
+        while (client.connected()) {
+          getFinder = "";
+            if (client.available()) {   // client data available to read
+                c = client.read(); // read 1 byte (character) from client
+                
+                switch(c){
+                   case 'G': getFinder = String(c);
+                             break;
+                   case 'E': getFinder = String(getFinder + c);
+                             if(getFinder.charAt(0) == 'G'){
+                                getFinder.setCharAt(1, c);
+                             }
+                             break;
+                   case 'T': getFinder =String(getFinder + c);
+                                 logFile = SD.open("log.txt", FILE_WRITE);
+                                 logFile.print(getFinder.charAt(1));
+                                 logFile.print('W');
+                                 logFile.close(); 
+                             if(getFinder.charAt(0) == 'G' && getFinder.charAt(1) == 'E'){
+                                client.read(); //remove leading space 
+                                readRequestLine(); 
+                              }  
+                             break;  
+                }
+                               
                 // last line of client request is blank and ends with \n
                 // respond to client only after last line received
                 if (c == '\n' && currentLineIsBlank) {
@@ -94,13 +178,13 @@ void loop()
                     client.println("Content-Type: text/html");
                     client.println("Connection: close");
                     client.println();
-                    // send web page
-                    webFile = SD.open("index.htm");        // open web page file
-                    if (webFile) {
-                        while(webFile.available()) {
-                            client.write(webFile.read()); // send web page to client
+                    
+                    logFile = SD.open("log.txt");
+                    if (logFile) {
+                        while(logFile.available()) {
+                            client.write(logFile.read()); // send web page to client
                         }
-                        webFile.close();
+                        logFile.close();
                     }
                     break;
                 }
