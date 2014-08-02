@@ -44,15 +44,32 @@ IPAddress ip(192, 168, 1, 20); // IP address, may need to change depending on ne
 
 EthernetServer server(80);  // create a server at port 80
 
+
+
+String getFinder;
+String variable;
+String value;
 File webFile;
 File logFile;
+int motorControl = 3;
+char c;
+EthernetClient client;
+//
+//void log(){
+//      logFile = SD.open("log.txt", FILE_WRITE);
+//      logFile.print(c);
+//      logFile.close(); 
+//  
+//}
 
 void setup()
 {
 //    // disable w5100 SPI
-//    pinMode(10,OUTPUT);
+    pinMode(motorControl,OUTPUT);
 //    digitalWrite(10,HIGH);
-  
+    value.reserve(25);
+    getFinder.reserve(3);
+    variable.reserve(10);
     Ethernet.begin(mac, ip);  // initialize Ethernet device
     server.begin();           // start to listen for clients
     Serial.begin(9600);       // for debugging
@@ -72,20 +89,76 @@ void setup()
     Serial.println("SUCCESS - Found index.htm file.");
 }
 
+void processVariable(){
+      logFile = SD.open("log.txt", FILE_WRITE);
+      logFile.print("PROCESSING VARIABLE!");
+      logFile.println(variable);
+      logFile.close(); 
+  
+   switch(variable.charAt(0)){
+      case 'u': //username
+                 break;
+      case 'c': //command
+                 if(value.compareTo("open") == 0){//assume value == open
+                   digitalWrite(motorControl, HIGH);
+                 }else if (value.compareTo("close")== 0){//assume value == close
+                   digitalWrite(motorControl, LOW);                   
+                 }
+                 break;
+      case 'p': //password
+                 break;
+      default:   break; 
+   }
+}
+
+void readRequestLine(){
+  //check for params, return if empty
+  while((c = client.read()) != '?'){
+    if(c == ' ')
+      return; 
+  };
+  boolean onVariable = true;
+  value = "";
+  variable = "";
+  while((c = client.read()) != ' '){
+    if(c != '&'){
+      if(onVariable){
+        if(c == '='){
+          onVariable = false;
+        }else{
+          variable += c;
+        }
+      }else{
+          value += c;
+      }
+    }else{ 
+      //process current set of variables
+      processVariable();
+      
+      variable = "";
+      value = "";
+      onVariable = true;
+    }
+  }
+  processVariable();
+}
+
 void loop()
 {
-    EthernetClient client = server.available();  // try to get client
+    client = server.available();  // try to get client
 
     if (client) {  // got client?
         boolean currentLineIsBlank = true;
         while (client.connected()) {
+          getFinder = "";
             if (client.available()) {   // client data available to read
-                char c = client.read(); // read 1 byte (character) from client
+                //remove get
+                c = client.read();
                 
-                logFile = SD.open("log.txt", FILE_WRITE);
-                logFile.print(c);
-                logFile.close();
-                
+                if(c == 'G' && (c = client.read()) == 'E' && (c = client.read()) == 'T'){
+                  client.read(); // read trailing space
+                  readRequestLine(); 
+                }
                 // last line of client request is blank and ends with \n
                 // respond to client only after last line received
                 if (c == '\n' && currentLineIsBlank) {
@@ -94,13 +167,13 @@ void loop()
                     client.println("Content-Type: text/html");
                     client.println("Connection: close");
                     client.println();
-                    // send web page
-                    webFile = SD.open("index.htm");        // open web page file
-                    if (webFile) {
-                        while(webFile.available()) {
-                            client.write(webFile.read()); // send web page to client
+                    
+                    logFile = SD.open("log.txt");
+                    if (logFile) {
+                        while(logFile.available()) {
+                            client.write(logFile.read()); // send web page to client
                         }
-                        webFile.close();
+                        logFile.close();
                     }
                     break;
                 }
