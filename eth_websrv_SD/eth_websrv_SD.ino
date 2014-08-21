@@ -62,11 +62,17 @@ EthernetClient client;
 //  
 //}
 
+unsigned long int currentRandomNumberSeed = 0;
+unsigned long int getRandomInt(){
+	currentRandomNumberSeed = (unsigned long int)(75*currentRandomNumberSeed)%65521;
+	return currentRandomNumberSeed;
+}
+
 void setup()
 {
-//    // disable w5100 SPI
     pinMode(motorControl,OUTPUT);
-//    digitalWrite(10,HIGH);
+    
+    //reserve space for strings
     value.reserve(25);
     getFinder.reserve(3);
     variable.reserve(10);
@@ -83,29 +89,66 @@ void setup()
     Serial.println("SUCCESS - SD card initialized.");
     // check for index.htm file
     if (!SD.exists("index.htm")) {
-        Serial.println("ERROR - Can't find index.htm file!");
+        Serial.println("ERROR -s Can't find index.htm file!");
         return;  // can't find index file
     }
     Serial.println("SUCCESS - Found index.htm file.");
 }
+
+File userFile;
+boolean turnOn = false;
+String seed = "";
+String password = "";
 
 void processVariable(){
       logFile = SD.open("log.txt", FILE_WRITE);
       logFile.print("PROCESSING VARIABLE!");
       logFile.println(variable);
       logFile.close(); 
-  
+ 
+  String usernamePath = "users/";
+  //TODO switch to enum
    switch(variable.charAt(0)){
-      case 'u': //username
+      case 'u':  logFile.println("Request Username: " + value);
+                 usernamePath += value;
+                 char usernameCharArray [usernamePath.length()];
+                 usernamePath.toCharArray(usernameCharArray, usernamePath.length());
+                 if(SD.exists(usernameCharArray)){
+                  userFile = SD.open(usernameCharArray);
+                  while((c = userFile.read()) != ' '){
+                    seed += c; 
+                  };
+                  logFile.println("seed read: " + seed);
+                  currentRandomNumberSeed = seed.toInt();
+                  
+                  //REQUIRED: passwords must end with \n
+                  while((c = userFile.read()) != '\n'){
+                    password += (char)((int)c + getRandomInt()%256); 
+                  };                  
+                }
                  break;
       case 'c': //command
-                 if(value.compareTo("open") == 0){//assume value == open
-                   digitalWrite(motorControl, HIGH);
-                 }else if (value.compareTo("close")== 0){//assume value == close
-                   digitalWrite(motorControl, LOW);                   
+                 logFile.println("Request Command: " + value); 
+                 if(value.compareTo("open") == 0){
+                   turnOn = true;
+                   //digitalWrite(motorControl, HIGH);
+                 }else{//assume value == close
+                   turnOn = false;                   
                  }
                  break;
       case 'p': //password
+                 logFile.println("Access Requested: Recieved - " + value + "\t Actual - " + password); 
+                 if(value.compareTo(password)){
+                   if(turnOn){
+                     digitalWrite(motorControl, HIGH);
+                   }else{
+                     digitalWrite(motorControl, LOW);
+                   }
+                   logFile.remove();
+                   logFile.open(usernamePath, FILE_WRITE);
+                   logFile.println(seed + 1);
+                   logFile.println(password);
+                 }
                  break;
       default:   break; 
    }
@@ -152,12 +195,12 @@ void loop()
         while (client.connected()) {
           getFinder = "";
             if (client.available()) {   // client data available to read
-                //remove get
                 c = client.read();
                 
+                //look for GET
                 if(c == 'G' && (c = client.read()) == 'E' && (c = client.read()) == 'T'){
-                  client.read(); // read trailing space
-                  readRequestLine(); 
+                  client.read();     // read space
+                  readRequestLine(); //read request params
                 }
                 // last line of client request is blank and ends with \n
                 // respond to client only after last line received
