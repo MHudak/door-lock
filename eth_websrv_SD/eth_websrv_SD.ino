@@ -87,14 +87,65 @@ String seed = "";
 String password = "";
 boolean seedRead = false;
 void processVariable(){
-//  Serial.println("pvar! " + variable);
-//  Serial.println("pval! " + value);
   Serial.print("charAt: ");
   Serial.println(variable.charAt(0));
   String usernamePath;
   usernamePath.reserve(15);
   usernamePath = "users/";
   //TODO switch to enum
+   switch(variable.charAt(0)){
+      case 'u':  usernamePath += value;
+                 usernamePath += ".txt";
+                 char usernameCharArray [15];
+                 usernamePath.toCharArray(usernameCharArray, usernamePath.length());
+                 if(SD.exists(usernameCharArray)){
+                   Serial.println("ufile exists");
+                  userFile = SD.open(usernameCharArray);
+                  while((c = userFile.read()) != ' '){
+                    seed += c; 
+                  };
+                  Serial.print("incSeed: ");
+                 Serial.println(seed);
+                  currentRandomNumberSeed = seed.toInt();
+                  seedRead = true;
+                  //REQUIRED: passwords must end with \n
+                  while((c = userFile.read()) != '\n'){
+                    password += (char)((int)c + getRandomInt()%256); 
+                  };
+                  userFile.close();                  
+                }
+                else{
+                  Serial.println("no such username");
+                }
+                 break;
+      case 'c': //command
+                 Serial.print("req cmd: ");
+                Serial.println(value);
+                 if(value.compareTo("open") == 0){
+                   turnOn = true;
+                   //digitalWrite(motorControl, HIGH);
+                 }else{//assume value == close
+                   turnOn = false;                   
+                 }
+                 break;
+                 seedRead = false;
+                 break;
+      case 'p': //password
+                 logFile.println("Access Requested: Recieved - " + value + "\t Actual - " + password); 
+                 if(value.compareTo(password)){
+                   if(turnOn){
+                     digitalWrite(motorControl, HIGH);
+                   }else{
+                     digitalWrite(motorControl, LOW);
+                   }
+                   logFile.remove();
+                   logFile.open(usernamePath, FILE_WRITE);
+                   logFile.println(seed + 1);
+                   logFile.println(password);
+                 }
+                 break;
+
+   }
    return;
 }
 
