@@ -74,7 +74,7 @@ EthernetClient client;
 
 unsigned long int currentRandomNumberSeed = 0;
 unsigned long int getRandomInt(){
-	currentRandomNumberSeed = (unsigned long int)(262139*currentRandomNumberSeed)%26843549;
+	currentRandomNumberSeed = (unsigned long int)(75*currentRandomNumberSeed)%26843549;
 	return currentRandomNumberSeed;
 }
 
@@ -93,8 +93,6 @@ void setup()
     if (!SD.begin(4)) {
         return;    // init failed
     }
-    unsigned long int x = 0xFFFFFFFF;
-    Serial.println(x);
 }
 
 //motor code/////////////////////////////
@@ -186,8 +184,6 @@ String password = "";
 unsigned long int saltedPW = 0;
 boolean seedRead = false;
 void processVariable(){
-  Serial.print("charAt: ");
-  Serial.println(variable.charAt(0));
   String usernamePath;
   char usernameCharArray [15];
   usernamePath.reserve(15);
@@ -202,14 +198,15 @@ void processVariable(){
                  usernamePath.toCharArray(usernameCharArray, usernamePath.length());
 //                 Serial.println(usernameCharArray);
                  if(SD.exists(usernameCharArray)){
-                   Serial.println("ufile exists");
-                  userFile = SD.open(usernameCharArray);
+//                   Serial.println("ufile exists");
+                  userFile = SD.open(usernameCharArray, FILE_READ);
+                  seed = "";
+                  saltedPW = 0;
                   while((c = userFile.read()) != '\n'){
                     seed += c; 
                   };
-//                  Serial.print("incSeed: ");
-//                 Serial.println(seed);
                   currentRandomNumberSeed = seed.toInt();
+                  
                   seedRead = true;
                   while(userFile.available()){
                     c=userFile.read();
@@ -221,7 +218,7 @@ void processVariable(){
 //                  Serial.println(password);               
                 }
                 else{
-                  Serial.println("no such username");
+//                  Serial.println("no such username");
                 }
                  break;
       case 'c': //command
@@ -237,23 +234,26 @@ void processVariable(){
                  seedRead = false;
                  break;
       case 'p': //password
-//                 Serial.print("incPW: ");
-//                 Serial.print(value);
-//                 Serial.print("\t actPW: ");
-//                 Serial.println(password); 
+                 Serial.print("incPW: ");
+                 Serial.print(value);
+                 Serial.print("\t actPW: ");
+                 Serial.println(saltedPW); 
                  if(value.toInt() == saltedPW){
                    if(turnOn){
+                     Serial.println("on");
                       motor(FORWARD, 255);
-                      delay(150);
+                      delay(25);
                       motor(RELEASE, 0);
                    }else{
+                     Serial.println("off");
                       motor(BACKWARD, 255);
-                      delay(150);
+                      delay(25);
                       motor(RELEASE, 0);
                    }
                    SD.remove(usernameCharArray);
                    userFile = SD.open(usernameCharArray, FILE_WRITE);
-                   userFile.println((seed + password.length()));
+                   Serial.println(currentRandomNumberSeed);
+                   userFile.println(currentRandomNumberSeed);
                    userFile.println(password);
                    userFile.close();
                  }else{
