@@ -90,37 +90,44 @@ void processVariable(){
   Serial.print("charAt: ");
   Serial.println(variable.charAt(0));
   String usernamePath;
+  char usernameCharArray [15];
   usernamePath.reserve(15);
-  usernamePath = "users/";
+  //TODO get directory to work
+//  usernamePath = "/users/";
+  usernamePath = "";
   //TODO switch to enum
+  //TODO change to be order independent
    switch(variable.charAt(0)){
       case 'u':  usernamePath += value;
-                 usernamePath += ".txt";
-                 char usernameCharArray [15];
+                 usernamePath += ".txt ";
                  usernamePath.toCharArray(usernameCharArray, usernamePath.length());
+//                 Serial.println(usernameCharArray);
                  if(SD.exists(usernameCharArray)){
                    Serial.println("ufile exists");
                   userFile = SD.open(usernameCharArray);
-                  while((c = userFile.read()) != ' '){
+                  while((c = userFile.read()) != '\n'){
                     seed += c; 
                   };
-                  Serial.print("incSeed: ");
-                 Serial.println(seed);
+//                  Serial.print("incSeed: ");
+//                 Serial.println(seed);
                   currentRandomNumberSeed = seed.toInt();
                   seedRead = true;
                   //REQUIRED: passwords must end with \n
-                  while((c = userFile.read()) != '\n'){
+                  while(userFile.available()){
+                    c=userFile.read();
                     password += (char)((int)c + getRandomInt()%256); 
                   };
-                  userFile.close();                  
+                  userFile.close();
+//                  Serial.print("incPW: ");
+//                  Serial.println(password);               
                 }
                 else{
                   Serial.println("no such username");
                 }
                  break;
       case 'c': //command
-                 Serial.print("req cmd: ");
-                Serial.println(value);
+//                 Serial.print("req cmd: ");
+//                Serial.println(value);
                  if(value.compareTo("open") == 0){
                    turnOn = true;
                    //digitalWrite(motorControl, HIGH);
@@ -131,17 +138,23 @@ void processVariable(){
                  seedRead = false;
                  break;
       case 'p': //password
-                 logFile.println("Access Requested: Recieved - " + value + "\t Actual - " + password); 
-                 if(value.compareTo(password)){
+//                 Serial.print("incPW: ");
+//                 Serial.print(value);
+//                 Serial.print("\t actPW: ");
+//                 Serial.println(password); 
+                 if(value.compareTo(password) == 0){
                    if(turnOn){
+                     Serial.println("on");
                      digitalWrite(motorControl, HIGH);
                    }else{
+                     Serial.println("off");
                      digitalWrite(motorControl, LOW);
                    }
-                   logFile.remove();
-                   logFile.open(usernamePath, FILE_WRITE);
-                   logFile.println(seed + 1);
-                   logFile.println(password);
+                   SD.remove(usernameCharArray);
+                   userFile = SD.open(usernameCharArray, FILE_WRITE);
+                   userFile.println((seed + password.length()));
+                   userFile.println(password);
+                   userFile.close();
                  }
                  break;
 
