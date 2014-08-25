@@ -60,7 +60,7 @@ EthernetClient client;
 
 unsigned long int currentRandomNumberSeed = 0;
 unsigned long int getRandomInt(){
-	currentRandomNumberSeed = (unsigned long int)(75*currentRandomNumberSeed)%65521;
+	currentRandomNumberSeed = (unsigned long int)(262139*currentRandomNumberSeed)%26843549;
 	return currentRandomNumberSeed;
 }
 
@@ -79,12 +79,15 @@ void setup()
     if (!SD.begin(4)) {
         return;    // init failed
     }
+    unsigned long int x = 0xFFFFFFFF;
+    Serial.println(x);
 }
 
 File userFile;
 boolean turnOn = false;
 String seed = "";
 String password = "";
+unsigned long int saltedPW = 0;
 boolean seedRead = false;
 void processVariable(){
   Serial.print("charAt: ");
@@ -112,10 +115,10 @@ void processVariable(){
 //                 Serial.println(seed);
                   currentRandomNumberSeed = seed.toInt();
                   seedRead = true;
-                  //REQUIRED: passwords must end with \n
                   while(userFile.available()){
                     c=userFile.read();
-                    password += (char)((int)c + getRandomInt()%256); 
+                    password += c;
+                    saltedPW += (unsigned long int)((unsigned int)c + getRandomInt()); 
                   };
                   userFile.close();
 //                  Serial.print("incPW: ");
@@ -142,7 +145,7 @@ void processVariable(){
 //                 Serial.print(value);
 //                 Serial.print("\t actPW: ");
 //                 Serial.println(password); 
-                 if(value.compareTo(password) == 0){
+                 if(value.toInt() == saltedPW){
                    if(turnOn){
                      Serial.println("on");
                      digitalWrite(motorControl, HIGH);
@@ -155,6 +158,8 @@ void processVariable(){
                    userFile.println((seed + password.length()));
                    userFile.println(password);
                    userFile.close();
+                 }else{
+                  //TODO invalid password 
                  }
                  break;
 
