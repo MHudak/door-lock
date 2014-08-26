@@ -239,6 +239,10 @@ void processVariable(){
                  Serial.print("\t actPW: ");
                  Serial.println(saltedPW); 
                  
+                 logFile = SD.open("logFile.txt", FILE_WRITE);
+                 logFile.print("saltedPW: ");
+                 logFile.println(saltedPW);
+                 logFile.close();
                  if(value.toInt() == saltedPW){
                    if(turnOn){
                      Serial.println("on");
