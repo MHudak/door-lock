@@ -202,11 +202,11 @@ void processVariable(){
                   userFile = SD.open(usernameCharArray, FILE_READ);
                   seed = "";
                   saltedPW = 0;
+                  password="";
                   while((c = userFile.read()) != '\n'){
                     seed += c; 
                   };
                   currentRandomNumberSeed = seed.toInt();
-                  
                   seedRead = true;
                   while(userFile.available()){
                     c=userFile.read();
@@ -238,6 +238,7 @@ void processVariable(){
                  Serial.print(value);
                  Serial.print("\t actPW: ");
                  Serial.println(saltedPW); 
+                 
                  if(value.toInt() == saltedPW){
                    if(turnOn){
                      Serial.println("on");
