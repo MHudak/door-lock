@@ -176,7 +176,7 @@ void shiftWrite(int output, int high_low)
   digitalWrite(MOTORLATCH, LOW);
 }
 /////////////////////////////////////////////////////////////////////////////////////////////
-
+File logFile;
 File userFile;
 boolean turnOn = false;
 String seed = "";
@@ -333,14 +333,14 @@ void loop()
                     client.println("Connection: close");
                     client.println();
                     
-/*                    logFile = SD.open("log.txt");
+                    logFile = SD.open("log.txt");
                     if (logFile) {
                         while(logFile.available()) {
                             client.write(logFile.read()); // send web page to client
                         }
                         logFile.close();
                     }
-*/                    break;
+                    break;
                 }
                 // every line of text received from the client ends with \r\n
                 if (c == '\n') {
