@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="css/bootstrap.min.css">
+        <style>
+            body {
+                padding-top: 50px;
+                padding-bottom: 20px;
+            }
+        </style>
+    </head>
+    <body>
+    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-collapse collapse">
+          <form class="navbar-form navbar-right" role="form">
+            <div class="form-group">
+              <input type="text" placeholder="Username" class="form-control">
+              <input type="password" placeholder="Password" class="form-control">
+            </div>
+            <button type="submit" class="btn btn-success">Sign in</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="jumbotron">
+      <div class="container">
+        <h1>Welcome to Apartment 5635!</h1>
+        <p>You're looking at the door controller homepage for Apt 5635. Lucky you! From here you can choose an action:</p>
+        <p><a class="btn btn-primary btn-lg btn-success" role="button" href="http://192.168.1.20/?c=open">Unlock</a></p>
+		<p><a class="btn btn-primary btn-lg btn-danger" role="button" href="http://192.168.1.20/?c=close">Lock</a></p>
+	  </div>
+    </div>
+      <hr>
+    </div> <!-- /container -->        
+        <script src="js/vendor/bootstrap.min.js"></script>
+    </body>
+</html>
