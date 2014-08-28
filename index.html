@@ -34,5 +34,64 @@
       <hr>
     </div> <!-- /container -->        
         <script src="js/vendor/bootstrap.min.js"></script>
+		<script type="text/JavaScript">
+			//check seed
+			function checkCookie() {
+				var seed=getCookie("seed");
+				if (seed == "") {
+					seed = prompt("Enter your seed value:", "");
+					if (seed != "" && seed != null) {
+						setCookie("seed", seed, 365);
+					}
+				}
+			}		
+					
+			//set seed		
+			function setCookie(cname, cvalue, exdays) {
+				var d = new Date();
+				d.setTime(d.getTime() + (exdays*24*60*60*1000));
+				var expires = "expires="+d.toUTCString();
+				document.cookie = cname + "=" + cvalue + "; " + expires;
+			}		
+
+			//retrieve seed
+			function getCookie(cname) {
+				var name = cname + "=";
+				var ca = document.cookie.split(';');
+				for(var i=0; i<ca.length; i++) {
+					var c = ca[i];
+					while (c.charAt(0)==' ') c = c.substring(1);
+					if (c.indexOf(name) != -1) return c.substring(name.length,c.length);
+				}
+				return "";
+			}
+					
+			//random number generator
+			var currentRandomNumberSeed = 0;
+			function getRandomInt(){
+				currentRandomNumberSeed = (2147483629*currentRandomNumberSeed + 2147483587)%2147483647;
+				return currentRandomNumberSeed;
+			}
+					
+			//url formatter		
+			function format(value, length){
+				var returnVal = new Array();
+				while(length-- > 0){
+					if(value > 0){
+						returnVal[length] = value%10;
+						value = Math.floor(value/10);
+					}else{
+						returnVal[length] = 0;
+					}
+				}
+				return returnVal.join("");
+			}
+			
+			function submit(command){
+				
+				saltedPW = calculatePassword();
+				location.href = "192.168.1.20/?c=" + command + "&u=" + username + "&password=" + saltedPW;
+			}
+		</script>
     </body>
 </html>
