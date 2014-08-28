@@ -10,26 +10,31 @@
         </style>
     </head>
     <body>
-    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
-      <div class="container">
-        <div class="navbar-collapse collapse">
-          <form class="navbar-form navbar-right" role="form">
-            <div class="form-group">
-              <input type="text" placeholder="Username" class="form-control">
-              <input type="password" placeholder="Password" class="form-control">
-            </div>
-            <button type="submit" class="btn btn-success">Sign in</button>
-          </form>
-        </div>
-      </div>
+    <div class="navbar navbar-inverse navbar-fixed-top">
     </div>
     <div class="jumbotron">
       <div class="container">
         <h1>Welcome to Apartment 5635!</h1>
-        <p>You're looking at the door controller homepage for Apt 5635. Lucky you! From here you can choose an action:</p>
-        <p><a class="btn btn-primary btn-lg btn-success" role="button" href="http://192.168.1.20/?c=open">Unlock</a></p>
-		<p><a class="btn btn-primary btn-lg btn-danger" role="button" href="http://192.168.1.20/?c=close">Lock</a></p>
+        <p>You're looking at the door controller homepage for Apt 5635. Lucky you! [{From here you can choose an action:}{Please Log In}]</p>
+        <div class="col-md-12">
+		<!--
+		<form action="192.168.1.20/index.html" method="post" target="popupwindow" onsubmit="">
+		  <p>
+			<input type="text" class="seed" name="seed" size="18" placeholder="Username" value="" />
+			<input type="text" class="username" name="username" size="18" placeholder="Username" value="" />
+			<input type="password" class="password" name="password" size="18" placeholder="Password" value="" />
+			<input class="email_btn" name="submit" type="submit" value="Done" />
+		  </p>
+		</form>
+		-->
+		</div>
+		<div class="col-md-12">
+			<p><a class="btn btn-primary btn-lg btn-success" role="button" action="submit('open');">Unlock</a></p>
+			<p><a class="btn btn-primary btn-lg btn-danger" role="button" action="submit('close');">Lock</a></p>
+		</div>
 	  </div>
+    </div>
+    <div class="navbar navbar-inverse navbar-fixed-bottom">
     </div>
       <hr>
     </div> <!-- /container -->        
@@ -88,7 +93,6 @@
 			}
 			
 			function submit(command){
-				
 				saltedPW = calculatePassword();
 				location.href = "192.168.1.20/?c=" + command + "&u=" + username + "&password=" + saltedPW;
 			}
