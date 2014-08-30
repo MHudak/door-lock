@@ -1,50 +1,104 @@
 <!DOCTYPE html>
     <head>
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+        <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jquerymobile/1.4.3/jquery.mobile.min.css" />
         <style>
             
         </style>
     </head>
-    <body>
-    <div class="navbar navbar-inverse navbar-fixed-top">
-    </div>
-    <div class="jumbotron">
-      <div class="container">
-        <h1>Welcome to Apartment 5635!</h1>
-        <p>You're looking at the door controller homepage for Apt 5635. Lucky you! [{From here you can choose an action:}{Please Log In}]</p>
-        <div class="col-md-12">
-		<!--
-		<form action="192.168.1.20/index.html" method="post" target="popupwindow" onsubmit="">
-		  <p>
-			<input type="text" class="seed" name="seed" size="18" placeholder="Username" value="" />
-			<input type="text" class="username" name="username" size="18" placeholder="Username" value="" />
-			<input type="password" class="password" name="password" size="18" placeholder="Password" value="" />
-			<input class="email_btn" name="submit" type="submit" value="Done" />
-		  </p>
-		</form>
-		-->
-		</div>
-		<div class="col-md-12">
-			<p><a class="btn btn-primary btn-lg btn-success" role="button" action="submit('open');">Unlock</a></p>
-			<p><a class="btn btn-primary btn-lg btn-danger" role="button" action="submit('close');">Lock</a></p>
-		</div>
-	  </div>
-    </div>
-    <div class="navbar navbar-inverse navbar-fixed-bottom">
-    </div>
-      <hr>
-    </div> <!-- /container -->        
-        <script src="js/vendor/bootstrap.min.js"></script>
+    <body>    
+    	<div data-role="page">
+    		<div data-role="header">
+    			<h1>Welcome to 5535</h1>
+    			</div>
+    		<div data-role="content">
+    			<h2>Welcome to 5535</h2>
+    		</div>
+   		</div><!-- page -->
+
+   		<div data-role="page" id="enter-seed">
+    		<div data-role="header">
+    			<h1>Welcome to 5535</h1>
+    		</div>
+    		<div data-role="content">
+				<h1>You're new here.</h1>
+				<p>You were given a seed (fancy word for number) with your username and password.</p><h2>Enter your seed below:</h2>
+    			<form id="enter-seed" action="#login" method="POST">
+					<input id="user-seed" type="password" name="user-seed">
+					<input type="submit" value="Go!">
+				</form>
+			</div>
+   		</div><!-- page -->
+
+   		<div data-role="page" id="login">
+    		<div data-role="header">
+    			<h1>Welcome to 5535</h1>
+    		</div>
+    		<div data-role="content">
+    			<h1>Login</h1>
+    			<form id="login" action="#lock-unlock" method="POST">
+					Username: <input id="user-id" type="text" name="user-id">
+					Password: <input id="user-password" type="password" name="user-password">
+					<input type="submit" value="Go!">
+				</form>
+    		</div>
+   		</div><!-- page -->
+    	
+   		<div data-role="page" id="success">
+    		<div data-role="header">
+    			<h1>Welcome to 5535</h1>
+    		</div>
+    		<div data-role="content">
+    			<h2>success</h2>
+    		</div>
+   		</div><!-- page -->
+
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+		<script src="http://ajax.googleapis.com/ajax/libs/jquerymobile/1.4.3/jquery.mobile.min.js"></script>
 		<script type="text/JavaScript">
-			//check seed
+			$( document ).ready(function() {
+			    console.log( "ready!" );
+			    checkCookie();
+			});
+
+			// ajax call to check seed submission
+			//callback handler for form submit
+			$("#enter-seed").submit(function(e)
+			{
+			    var postData = $(this).serializeArray();
+			    var formURL = $(this).attr("action");
+			    $.ajax(
+			    {
+			        url : formURL,
+			        type: "POST",
+			        data : postData,
+
+			        // Successful seed submission, take user to login page
+			        success:function(data, textStatus, jqXHR) 
+			        {
+			            $(":mobile-pagecontainer").pagecontainer( "change", "#login", {transition: "flip"}); 
+			        },
+			        error: function(jqXHR, textStatus, errorThrown) 
+			        {
+			            alert('failed');      
+			        }
+			    });
+			    e.preventDefault(); //STOP default action
+			    e.unbind(); //unbind. to stop multiple form submit.
+			});
+
+			//check for seed value stored on client's computer
 			function checkCookie() {
 				var seed=getCookie("seed");
 				if (seed == "") {
-					seed = prompt("Enter your seed value:", "");
+					// if no seed exists, prompt user to enter their given seed value
+					$(":mobile-pagecontainer").pagecontainer( "change", "#enter-seed", {transition: "flip"});
 					if (seed != "" && seed != null) {
 						setCookie("seed", seed, 365);
 					}
+				} else {
+					$(":mobile-pagecontainer").pagecontainer( "change", "#login", {transition: "flip"});
 				}
 			}		
 					
@@ -92,6 +146,13 @@
 			function submit(command){
 				saltedPW = calculatePassword();
 				location.href = "192.168.1.20/?c=" + command + "&u=" + username + "&password=" + saltedPW;
+			}
+
+			function success(){
+				var PASSWORD_LENGTH = 8;
+				var seed = parseInt(getCookie("seed")) + PASSWORD_LENGTH;
+				setCookie("seed", seed, 365);
+				setTimeout("location.href = 'index.html';", 1000);
 			}
 		</script>
     </body>
