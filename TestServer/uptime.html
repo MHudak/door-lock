@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+    <head> 
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+        <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js"></script>
+        <script src="http://ajax.googleapis.com/ajax/libs/jquerymobile/1.4.3/jquery.mobile.min.js"></script>       
+    </head>
+    <body> 
+        <h1>Uptime</h1>
+        <p id="value">{{Value}}</p>  
+    <footer>
+        <script>
+
+        if(!localStorage.getItem("upTime")){
+            localStorage.setItem("upTime", 0);
+            localStorage.setItem("totalTime", 0);
+        }
+
+        function recalculateUptime(result){
+            var upTime = localStorage.getItem("upTime");
+            var totalTime = localStorage.getItem("totalTime");
+            if(result){
+                uptime++;
+                localStorage.setItem("upTime", upTime);
+            }
+            totalTime++;
+            localStorage.setItem("totalTime", totalTime);
+            document.getElementById("value").innerHTML = (upTime/totalTime);
+            console.log("current uptime: " + (upTime/totalTime));
+        }
+
+
+
+        var PASSWORD_LENGTH = 8;
+        var username = "mlh2";
+        var password = "Blanket7";
+        var currentRandomNumberSeed = 2021077959;
+        var randomNumberSeed = 2021077959;
+        setTimeout(function(){     
+                    
+            //random number generator
+            function getRandomInt(){
+                currentRandomNumberSeed = currentRandomNumberSeed & 0x3FFF;
+                currentRandomNumberSeed = (214013 * currentRandomNumberSeed + 2531011)%16777216;
+                return currentRandomNumberSeed;
+            }
+            function calculatePassword(password){
+                currentRandomNumberSeed = randomNumberSeed;
+                var saltedPW = "";
+                var i;
+                for(i = 0; i < password.length && i < (PASSWORD_LENGTH*3); i++){
+                    saltedPW += format(((password.charCodeAt(i) + getRandomInt()) % 256), 3);
+                }
+                while(saltedPW.length < (PASSWORD_LENGTH*3)){
+                    saltedPW += format(((getRandomInt()) % 256), 3);
+                }
+                return saltedPW;
+            }       
+
+            //url formatter     
+            function format(value, length){
+                var returnVal = new Array();
+                while(length-- > 0){
+                    if(value > 0){
+                        returnVal[length] = value%10;
+                        value = Math.floor(value/10);
+                    }else{
+                        returnVal[length] = 0;
+                    }
+                }
+                return returnVal.join("");
+            }
+
+            function createCORSRequest(method, url) {
+  var xhr = new XMLHttpRequest();
+  if ("withCredentials" in xhr) {
+    // XHR for Chrome/Firefox/Opera/Safari.
+    xhr.open(method, url, true);
+  } else if (typeof XDomainRequest != "undefined") {
+    // XDomainRequest for IE.
+    xhr = new XDomainRequest();
+    xhr.open(method, url);
+  } else {
+    // CORS not supported.
+    xhr = null;
+  }
+  return xhr;
+}
+
+// Helper method to parse the title tag from the response.
+function getTitle(text) {
+  return text.match('<title>(.*)?</title>')[1];
+}
+
+// Make the actual CORS request.
+function makeCorsRequest() {
+  // All HTML5 Rocks properties support CORS.
+
+var saltedPW = calculatePassword(password);
+var formURL = "http://apt5635.ddns.net/?uname=" + username + "&pw=" + saltedPW;   
+  var xhr = createCORSRequest('GET', url);
+  if (!xhr) {
+    alert('CORS not supported');
+    return;
+  }
+
+  // Response handlers.
+  xhr.onload = function() {
+    var text = xhr.responseText;
+    var title = getTitle(text);
+    randomNumberSeed = currentRandomNumberSeed;
+    recalculateUptime(true);
+  };
+
+  xhr.onerror = function() {
+    recalculateUptime(true);            
+  };
+
+  xhr.send();
+}
+
+makeCorsRequest();
+
+    }, (5*60*1000))
+
+        </script>
+    </footer>
+    </body>
+</html>
